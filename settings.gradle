@@ -1,0 +1,6 @@
+rootProject.name = 'smart-agenda'
+
+include 'authentication-service'
+include 'schedule-service'
+include 'history-service'
+include 'notification-service'
