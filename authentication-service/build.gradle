@@ -1,0 +1,22 @@
+dependencies {
+	// Spring Boot starters
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+	// Database
+	runtimeOnly 'org.postgresql:postgresql'
+	implementation "org.flywaydb:flyway-core:${flywayVersion}"
+	implementation "org.flywaydb:flyway-database-postgresql:${flywayVersion}"
+
+	// JWT
+	implementation "com.auth0:java-jwt:${javaJwtVersion}"
+
+	// Testing
+	testImplementation 'org.springframework.security:spring-security-test'
+}
+
+bootJar {
+	archiveFileName = 'authentication-service.jar'
+}
