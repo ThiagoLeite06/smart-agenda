@@ -1,0 +1,31 @@
+dependencies {
+	// Spring Boot starters
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-graphql'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	// implementation 'org.springframework.boot:spring-boot-starter-aop' // TODO: Add with Circuit Breaker
+
+	// RabbitMQ (Publisher)
+	implementation 'org.springframework.boot:spring-boot-starter-amqp'
+
+	// Database
+	runtimeOnly 'org.postgresql:postgresql'
+	implementation "org.flywaydb:flyway-core:${flywayVersion}"
+	implementation "org.flywaydb:flyway-database-postgresql:${flywayVersion}"
+
+	// Resilience4j (Circuit Breaker) - TODO: Add when Spring Boot 4.0 compatible version available
+	// implementation "io.github.resilience4j:resilience4j-spring-boot3:${resilience4jVersion}"
+	// implementation "io.github.resilience4j:resilience4j-circuitbreaker:${resilience4jVersion}"
+
+	// OpenAPI/Swagger
+	implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
+
+	// Testing
+	testImplementation 'org.springframework.graphql:spring-graphql-test'
+	testImplementation 'org.springframework.amqp:spring-rabbit-test'
+}
+
+bootJar {
+	archiveFileName = 'schedule-service.jar'
+}
