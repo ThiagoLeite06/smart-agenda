@@ -1,0 +1,120 @@
+# Enums
+enum ConsultationStatus {
+    SCHEDULED
+    ACCOMPLISHED
+    CANCELLED
+    RESCHEDULED
+}
+
+enum Specialty {
+    CARDIOLOGY
+    DERMATOLOGY
+    EMERGENCY_MEDICINE
+    FAMILY_MEDICINE
+    GASTROENTEROLOGY
+    OBSTETRICS_AND_GYNECOLOGY
+    PEDIATRICS
+}
+
+# Types
+type Patient {
+    id: ID!
+    fullName: String!
+    email: String!
+    phone: String!
+    dateOfBirth: String!
+    createdAt: String!
+    updatedAt: String!
+}
+
+type Doctor {
+    id: ID!
+    fullName: String!
+    email: String!
+    phone: String!
+    specialty: Specialty!
+    crm: String!
+    createdAt: String!
+    updatedAt: String!
+}
+
+type Consultation {
+    id: ID!
+    patient: Patient!
+    doctor: Doctor!
+    status: ConsultationStatus!
+    scheduledAt: String!
+    completedAt: String
+    notes: String
+    createdAt: String!
+    updatedAt: String!
+}
+
+# Input Types
+input PatientInput {
+    fullName: String!
+    email: String!
+    phone: String!
+    dateOfBirth: String!
+}
+
+input DoctorInput {
+    fullName: String!
+    email: String!
+    phone: String!
+    specialty: Specialty!
+    crm: String!
+}
+
+input ConsultationInput {
+    patientId: ID!
+    doctorId: ID!
+    scheduledAt: String!
+    notes: String
+}
+
+input UpdateConsultationInput {
+    status: ConsultationStatus
+    scheduledAt: String
+    completedAt: String
+    notes: String
+}
+
+# Queries
+type Query {
+    # Patient queries
+    getPatientById(id: ID!): Patient
+    getAllPatients: [Patient!]!
+    getPatientByEmail(email: String!): Patient
+
+    # Doctor queries
+    getDoctorById(id: ID!): Doctor
+    getAllDoctors: [Doctor!]!
+    getDoctorsBySpecialty(specialty: Specialty!): [Doctor!]!
+    getDoctorByEmail(email: String!): Doctor
+    getDoctorByCrm(crm: String!): Doctor
+
+    # Consultation queries
+    getConsultationById(id: ID!): Consultation
+    getAllConsultations: [Consultation!]!
+    getConsultationsByPatientId(patientId: ID!): [Consultation!]!
+    getConsultationsByDoctorId(doctorId: ID!): [Consultation!]!
+    getFutureConsultationsByPatientId(patientId: ID!): [Consultation!]!
+    getFutureConsultationsByDoctorId(doctorId: ID!): [Consultation!]!
+    getConsultationsByStatus(status: ConsultationStatus!): [Consultation!]!
+}
+
+# Mutations
+type Mutation {
+    # Patient mutations
+    createPatient(input: PatientInput!): Patient!
+
+    # Doctor mutations
+    createDoctor(input: DoctorInput!): Doctor!
+
+    # Consultation mutations
+    createConsultation(input: ConsultationInput!): Consultation!
+    updateConsultation(id: ID!, input: UpdateConsultationInput!): Consultation!
+    cancelConsultation(id: ID!): Consultation!
+    completeConsultation(id: ID!): Consultation!
+}
