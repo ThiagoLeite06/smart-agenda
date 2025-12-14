@@ -2,6 +2,10 @@ package com.thiagoleite06.smartagenda.schedule.usecase.consultation;
 
 import com.thiagoleite06.smartagenda.schedule.domain.entity.Consultation;
 import com.thiagoleite06.smartagenda.schedule.domain.enums.ConsultationStatus;
+import com.thiagoleite06.smartagenda.schedule.infrastructure.messaging.event.ConsultationCreatedEvent;
+import com.thiagoleite06.smartagenda.schedule.infrastructure.messaging.event.NotificationRequest;
+import com.thiagoleite06.smartagenda.schedule.infrastructure.messaging.publisher.HistoryEventPublisher;
+import com.thiagoleite06.smartagenda.schedule.infrastructure.messaging.publisher.NotificationEventPublisher;
 import com.thiagoleite06.smartagenda.schedule.infrastructure.persistence.entity.ConsultationEntity;
 import com.thiagoleite06.smartagenda.schedule.infrastructure.persistence.repository.ConsultationJpaRepository;
 import com.thiagoleite06.smartagenda.schedule.infrastructure.persistence.repository.DoctorJpaRepository;
@@ -21,6 +25,8 @@ public class CreateConsultationUseCase {
     private final ConsultationJpaRepository consultationRepository;
     private final PatientJpaRepository patientRepository;
     private final DoctorJpaRepository doctorRepository;
+    private final HistoryEventPublisher historyEventPublisher;
+    private final NotificationEventPublisher notificationEventPublisher;
 
     @Transactional
     public Consultation execute(Consultation consultation) {
@@ -59,6 +65,38 @@ public class CreateConsultationUseCase {
         // Fetch patient and doctor details
         var patientEntity = patientRepository.findById(entity.getPatientId()).orElse(null);
         var doctorEntity = doctorRepository.findById(entity.getDoctorId()).orElse(null);
+
+        // Publish events
+        if (patientEntity != null && doctorEntity != null) {
+            // Publish to history service
+            ConsultationCreatedEvent historyEvent = ConsultationCreatedEvent.builder()
+                    .consultationId(entity.getId())
+                    .patientId(entity.getPatientId())
+                    .patientName(patientEntity.getFullName())
+                    .patientEmail(patientEntity.getEmail())
+                    .doctorId(entity.getDoctorId())
+                    .doctorName(doctorEntity.getFullName())
+                    .doctorSpecialty(doctorEntity.getSpecialty().name())
+                    .status(entity.getStatus())
+                    .scheduledAt(entity.getScheduledAt())
+                    .notes(entity.getNotes())
+                    .createdAt(entity.getCreatedAt())
+                    .build();
+            historyEventPublisher.publishNewConsultation(historyEvent);
+
+            // Publish notification
+            NotificationRequest notification = NotificationRequest.builder()
+                    .recipient(patientEntity.getEmail())
+                    .channel("EMAIL")
+                    .subject("Consultation Scheduled")
+                    .message(String.format("Your consultation with Dr. %s (%s) is scheduled for %s",
+                            doctorEntity.getFullName(),
+                            doctorEntity.getSpecialty(),
+                            entity.getScheduledAt()))
+                    .createdAt(LocalDateTime.now())
+                    .build();
+            notificationEventPublisher.publishNotification(notification);
+        }
 
         // Convert entity back to domain
         return Consultation.builder()

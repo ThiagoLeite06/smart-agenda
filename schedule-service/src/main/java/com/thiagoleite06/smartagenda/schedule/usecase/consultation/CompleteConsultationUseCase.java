@@ -4,6 +4,10 @@ import com.thiagoleite06.smartagenda.schedule.domain.entity.Consultation;
 import com.thiagoleite06.smartagenda.schedule.domain.entity.Doctor;
 import com.thiagoleite06.smartagenda.schedule.domain.entity.Patient;
 import com.thiagoleite06.smartagenda.schedule.domain.enums.ConsultationStatus;
+import com.thiagoleite06.smartagenda.schedule.infrastructure.messaging.event.ConsultationCompletedEvent;
+import com.thiagoleite06.smartagenda.schedule.infrastructure.messaging.event.NotificationRequest;
+import com.thiagoleite06.smartagenda.schedule.infrastructure.messaging.publisher.HistoryEventPublisher;
+import com.thiagoleite06.smartagenda.schedule.infrastructure.messaging.publisher.NotificationEventPublisher;
 import com.thiagoleite06.smartagenda.schedule.infrastructure.persistence.entity.ConsultationEntity;
 import com.thiagoleite06.smartagenda.schedule.infrastructure.persistence.repository.ConsultationJpaRepository;
 import com.thiagoleite06.smartagenda.schedule.infrastructure.persistence.repository.DoctorJpaRepository;
@@ -23,6 +27,8 @@ public class CompleteConsultationUseCase {
     private final ConsultationJpaRepository consultationRepository;
     private final PatientJpaRepository patientRepository;
     private final DoctorJpaRepository doctorRepository;
+    private final HistoryEventPublisher historyEventPublisher;
+    private final NotificationEventPublisher notificationEventPublisher;
 
     @Transactional
     public Consultation execute(Long id) {
@@ -36,6 +42,41 @@ public class CompleteConsultationUseCase {
         entity = consultationRepository.save(entity);
 
         log.info("Consultation completed successfully with ID: {}", entity.getId());
+
+        // Publish events
+        var patientEntity = patientRepository.findById(entity.getPatientId()).orElse(null);
+        var doctorEntity = doctorRepository.findById(entity.getDoctorId()).orElse(null);
+
+        if (patientEntity != null && doctorEntity != null) {
+            // Publish to history service
+            ConsultationCompletedEvent historyEvent = ConsultationCompletedEvent.builder()
+                    .consultationId(entity.getId())
+                    .patientId(entity.getPatientId())
+                    .patientName(patientEntity.getFullName())
+                    .patientEmail(patientEntity.getEmail())
+                    .doctorId(entity.getDoctorId())
+                    .doctorName(doctorEntity.getFullName())
+                    .doctorSpecialty(doctorEntity.getSpecialty().name())
+                    .status(entity.getStatus())
+                    .scheduledAt(entity.getScheduledAt())
+                    .completedAt(entity.getCompletedAt())
+                    .notes(entity.getNotes())
+                    .updatedAt(entity.getUpdatedAt())
+                    .build();
+            historyEventPublisher.publishConsultationUpdate(historyEvent);
+
+            // Publish notification
+            NotificationRequest notification = NotificationRequest.builder()
+                    .recipient(patientEntity.getEmail())
+                    .channel("EMAIL")
+                    .subject("Consultation Completed")
+                    .message(String.format("Your consultation with Dr. %s has been completed on %s",
+                            doctorEntity.getFullName(),
+                            entity.getCompletedAt()))
+                    .createdAt(LocalDateTime.now())
+                    .build();
+            notificationEventPublisher.publishNotification(notification);
+        }
 
         return convertToConsultation(entity);
     }
