@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: notification-service
+
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/notifications
+      auto-index-creation: true
+
+  graphql:
+    graphiql:
+      enabled: true
+      path: /graphiql
+    schema:
+      locations: classpath:graphql/
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: admin
+    password: admin123
+    listener:
+      simple:
+        retry:
+          enabled: true
+          max-attempts: 10
+          initial-interval: 6000
+
+server:
+  port: 8084
+
+logging:
+  level:
+    com.thiagoleite06.smartagenda.notification: DEBUG
+    org.springframework.amqp: DEBUG
+    org.springframework.data.mongodb: DEBUG

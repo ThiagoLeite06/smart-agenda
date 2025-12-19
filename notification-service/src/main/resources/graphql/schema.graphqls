@@ -1,0 +1,16 @@
+# Notification Type
+type Notification {
+    id: ID!
+    recipient: String!
+    channel: String!
+    subject: String!
+    message: String!
+    status: String!
+    createdAt: String!
+    sentAt: String
+}
+
+# Queries
+type Query {
+    getNotificationsByRecipient(recipient: String!): [Notification!]!
+}
