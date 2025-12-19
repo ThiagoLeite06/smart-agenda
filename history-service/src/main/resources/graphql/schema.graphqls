@@ -1,0 +1,22 @@
+# Previous Consultation Type
+type PreviousConsultation {
+    id: ID!
+    consultationId: ID!
+    patientId: ID!
+    patientName: String!
+    patientEmail: String!
+    doctorId: ID!
+    doctorName: String!
+    doctorSpecialty: String!
+    status: String!
+    scheduledAt: String!
+    completedAt: String
+    notes: String
+    createdAt: String!
+    updatedAt: String!
+}
+
+# Queries
+type Query {
+    getConsultationHistoryByPatientId(patientId: ID!): [PreviousConsultation!]!
+}
